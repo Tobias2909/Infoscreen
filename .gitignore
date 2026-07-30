@@ -1,0 +1,47 @@
+# Infoscreen: track the code and the hand-curated config. Everything a render regenerates,
+# every rotating counter, all secrets, and the big externally-managed trees stay out.
+
+# ---- generated bitmaps: rewritten on every render ----
+*.bgra
+*.png
+
+# ---- rotating runtime state ----
+panel_mode.txt
+dim_alpha.txt
+temp_value.txt
+notice_*.txt
+*_page.txt
+net_state.json
+
+# ---- fetched caches (all regenerable from the APIs) ----
+*cache*.json
+fetch_state.json
+slot_cache.json
+pihole_sid.json
+tasks_token.json
+icon_cache/
+
+# ---- append-only measured history: data, not code. NOT regenerable -- back these up
+#      separately, but they churn every 30 s so git is the wrong home for them.
+mpv_exits.log
+screens/net/live.json
+screens/net/samples.jsonl
+screens/net/netlog.jsonl
+screens/net/history.json
+
+# ---- big / externally managed ----
+media/
+venv/
+
+# ---- SECRETS: never commit ----
+screens/cal/calendars.json
+screens/cal/google_tasks_oauth.json
+screens/deals/itad_api.json
+screens/pihole/pihole_api.json
+
+# ---- python ----
+__pycache__/
+*.pyc
+
+# ---- the old versioning mechanism, superseded by git ----
+*bak*
