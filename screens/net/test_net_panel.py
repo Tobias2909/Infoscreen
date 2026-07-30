@@ -112,11 +112,19 @@ while t < now:
 
 _real_jlines = np.jlines
 np.jlines = lambda p, since=None: (smp if p == np.SAMPLES else _real_jlines(p, since))
-kc.net_online = lambda ttl=180: (False, now - 3600)   # force the red banner
+kc.net_online = lambda ttl=180: (False, now - 3600)   # report offline (see fake_finish)
 
 
 def fake_finish(key, img, outdir):
-    kc.draw_offline_banner(ImageDraw.Draw(img))
+    # The offline banner is an OVERLAY now (banner.py -> banner.bgra), not baked in by
+    # finish(), so kc.draw_offline_banner() no longer exists. Paint an equivalent strip
+    # here (same geometry and text helper banner.py uses) so the test still shows whether
+    # the net panel footer collides with the y1022-1080 band the overlay covers -- which is
+    # the whole reason this render gets dumped to a PNG.
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, kc.H - 58, kc.CROP_W, kc.H], fill=(10, 12, 18))
+    d.line([0, kc.H - 58, kc.CROP_W, kc.H - 58], fill=kc.ERR, width=2)
+    d.text((kc.PAD, kc.H - 45), kc.offline_text(now - 3600), font=kc.F(kc.FB, 30), fill=kc.ERR)
     img.crop((0, 0, kc.CROP_W, kc.H)).save("/tmp/net_test.png")
 
 
