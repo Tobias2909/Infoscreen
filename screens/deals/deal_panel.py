@@ -41,7 +41,7 @@ WATCH   = MYDIR + "/watchlist.json"
 IDS     = MYDIR + "/itad_ids.json"       # title -> {"id":uuid|null, "box":url}   (null id = confirmed not-found)
 CACHE   = MYDIR + "/deal_cache.json"     # {ts, data:{prices:{uuid:entry}}}
 KEYF    = MYDIR + "/itad_api.json"       # {"key": "..."} chmod 600
-PAGEF   = MYDIR + "/deals_page.txt"
+PAGEF   = os.environ.get("DEALS_PAGEF", MYDIR + "/deals_page.txt")   # env seam: previews must not advance the live counter
 AKS_IDS   = MYDIR + "/aks_ids.json"      # title -> {"id":int|null, "name":str}   (null id = no confident match)
 AKS_CACHE = MYDIR + "/aks_cache.json"    # {ts, last_ok, next_try, err, data:{title:{price,region,edition}}}
 TZI     = ZoneInfo(TZ)
@@ -53,7 +53,10 @@ CHIPBG  = (40, 47, 62)
 API     = "https://api.isthereanydeal.com"
 COUNTRY = "DE"
 SYM     = {"EUR": "€", "USD": "$", "GBP": "£"}
-PER, CARDH, GAP, ROW_TOP = 4, 190, 16, 196
+# 6 cards per page: the card lost 62 px of height, so the meta row (shop chip +
+# key/store kind + "was … · lowest ever …") is now ONE line instead of two --
+# scaling alone would not have fit, the two-line meta was what ate the space.
+PER, CARDH, GAP, ROW_TOP = 6, 128, 12, 196
 # grey-market / account-share shops to drop (ITAD's default feed usually excludes these anyway)
 BLOCK   = ("g2a", "kinguin", "eneba", "gamivo", "hrkgame", "difmark", "k4g", "igvault")
 
@@ -309,10 +312,11 @@ def cover(img, pil, x, y, w, h, r=12):
     ImageDraw.Draw(mask).rounded_rectangle([0, 0, w - 1, h - 1], radius=r, fill=255)
     img.paste(src, (x, y), mask)
 
-def chip(d, x, y, text, fg):
-    w = d.textlength(text, font=F(FR, 26)) + 32
-    d.rounded_rectangle([x, y, x + w, y + 42], radius=13, fill=CHIPBG)
-    d.text((x + 16, y + 8), text, font=F(FR, 26), fill=fg)
+def chip(d, x, y, text, fg, fs=26, h=42, pad=16):
+    """Rounded label pill; returns its width so the caller can lay out after it."""
+    w = d.textlength(text, font=F(FR, fs)) + pad * 2
+    d.rounded_rectangle([x, y, x + w, y + h], radius=h // 3, fill=CHIPBG)
+    d.text((x + w / 2, y + h / 2), text, font=F(FR, fs), fill=fg, anchor="mm")
     return w
 
 
@@ -329,71 +333,92 @@ def draw_setup_screen(d):
 
 
 def draw_card(img, d, cy, v):
+    """One deal row. Height is CARDH; everything below is measured from `cy`.
+
+    Layout at a glance -- cover | title (<=2 lines) over one meta row | price zone:
+      cover   x0+28,  77x108        price   right-aligned, cy+10
+      title   FB 28, 32 px line     -%pill  right-aligned, cy+64
+      meta    FR 20, chip + kind + "was … · lowest ever …", ellipsised
+      CDKeys  FR 20, bottom of the price zone
+    """
     x0, x1 = PAD, PANEL_W - PAD
     st = v["state"]
     accent = GREEN if (st == "deal" and v["is_atl"]) else (SALMON if st == "deal" else LINE)
 
-    d.rounded_rectangle([x0, cy, x1, cy + CARDH], radius=18, fill=CARD)
-    d.rounded_rectangle([x0 + 8, cy + 12, x0 + 16, cy + CARDH - 12], radius=4, fill=accent)
+    d.rounded_rectangle([x0, cy, x1, cy + CARDH], radius=14, fill=CARD)
+    d.rounded_rectangle([x0 + 8, cy + 10, x0 + 15, cy + CARDH - 10], radius=4, fill=accent)
 
     # cover art
-    tw, th = 110, CARDH - 36
-    tx0 = x0 + 32
+    tw, th = 77, CARDH - 20
+    tx0 = x0 + 28
     cov = icon(v["box"]) if v.get("box") else None
     if cov:
-        cover(img, cov, tx0, cy + 18, tw, th)
+        cover(img, cov, tx0, cy + 10, tw, th, r=9)
     else:
-        d.rounded_rectangle([tx0, cy + 18, tx0 + tw, cy + 18 + th], radius=12, fill=CHIPBG)
-    tx = tx0 + tw + 30
-    textw = x1 - 250 - tx - 16                     # reserve a 250px price zone on the right
+        d.rounded_rectangle([tx0, cy + 10, tx0 + tw, cy + 10 + th], radius=9, fill=CHIPBG)
+    tx = tx0 + tw + 22
+    textw = x1 - 190 - tx - 14                     # reserve a 190px price zone on the right
 
-    # title: up to 2 lines (long JRPG titles need it)
-    lines = wrap(d, v["title"], F(FB, 36), textw)[:2]
+    # title: up to 2 lines (long JRPG titles need it). 26 px keeps the whole
+    # "The Legend of Heroes: Trails of Cold Steel II" class of title on one line.
+    lines = wrap(d, v["title"], F(FB, 26), textw)[:2]
     if len(lines) == 2:
-        lines[1] = ellip(d, lines[1], F(FB, 36), textw)
-    ty = cy + 20
+        lines[1] = ellip(d, lines[1], F(FB, 26), textw)
+
+    # A 1-line title centres in the card; a 2-line one is pinned to the top so its
+    # meta row still clears the CDKeys line at cy+100. Both keep the meta row in
+    # the cy+64..96 band, which is exactly where the -x% pill lives -- hence the
+    # pill-aware right limit below.
+    ty = cy + (6 if len(lines) == 2 else 28)
     for ln in lines:
-        d.text((tx, ty), ln, font=F(FB, 36), fill=FG); ty += 42
+        d.text((tx, ty), ln, font=F(FB, 26), fill=FG); ty += 30
+    meta_y = ty + 10
 
-    # chip + info: right under a 1-line title; but on a cramped 2-line title, pin higher + tighter
-    # so the "lowest ever" line isn't jammed against the card's bottom edge (single-line cards unchanged)
-    one = len(lines) == 1
-    meta_y = (ty + 6) if one else (cy + 100)
-    info_dy = 56 if one else 50
-
-    rx = x1 - 30
+    rx = x1 - 24
     if st == "deal":
-        cw = chip(d, tx, meta_y, v["shop"], ACC)
-        d.text((tx + cw + 14, meta_y + 8), v["kind"], font=F(FR, 24),
+        # the pill is measured before the meta row is drawn: the meta row may run
+        # the full card width when there is no discount pill to collide with, and
+        # that extra ~100 px is what keeps "lowest ever €54.46" from ellipsising
+        pill = f"-{v['cut']}%" if v["cut"] else ""
+        pw = (d.textlength(pill, font=F(FB, 22)) + 20) if pill else 0
+        meta_right = rx - (pw + 14 if pw else 0)
+
+        cw = chip(d, tx, meta_y, v["shop"], ACC, fs=20, h=32, pad=12)
+        mx = tx + cw + 12
+        d.text((mx, meta_y + 4), v["kind"], font=F(FR, 20),
                fill=ACC if v["kind"].endswith("key") else SUB)
+        mx += d.textlength(v["kind"], font=F(FR, 20)) + 14
         info = []
         if v["cut"] and v["regular"]: info.append("was " + v["regular"])
         if v["atl"]:                  info.append("lowest ever " + v["atl"])
         if info:
-            d.text((tx, meta_y + info_dy), ellip(d, "   ·   ".join(info), F(FR, 24), textw),
-                   font=F(FR, 24), fill=GREEN if v["is_atl"] else SUB)
-        d.text((rx, cy + 34), v["price"], font=F(FB, 56), fill=GREEN if v["is_atl"] else FG, anchor="ra")
-        if v["cut"]:
-            pill = f"-{v['cut']}%"
-            pw = d.textlength(pill, font=F(FB, 28)) + 26
-            d.rounded_rectangle([rx - pw, cy + 100, rx, cy + 142], radius=13, fill=CHIPBG)
-            d.text((rx - pw / 2, cy + 121), pill, font=F(FB, 28),
+            d.text((mx, meta_y + 4), ellip(d, "·  " + "  ·  ".join(info),
+                                           F(FR, 20), max(0, meta_right - mx)),
+                   font=F(FR, 20), fill=GREEN if v["is_atl"] else SUB)
+        d.text((rx, cy + 10), v["price"], font=F(FB, 42), fill=GREEN if v["is_atl"] else FG, anchor="ra")
+        if pill:
+            d.rounded_rectangle([rx - pw, cy + 64, rx, cy + 96], radius=10, fill=CHIPBG)
+            d.text((rx - pw / 2, cy + 80), pill, font=F(FB, 22),
                    fill=GREEN if v["is_atl"] else SALMON, anchor="mm")
     else:
         msg = {"nodeal": "only grey-market listings" if v.get("had") else "no price yet",
                "notfound": "not found on IsThereAnyDeal", "pending": "looking up…"}[st]
-        d.text((tx, meta_y), msg, font=F(FR, 28), fill=SUB)
         if st == "nodeal" and v.get("atl"):
-            d.text((tx, meta_y + 44), "lowest ever  " + v["atl"], font=F(FR, 24), fill=SUB)
-        d.text((rx, cy + 60), "—" if st != "pending" else "…", font=F(FL, 60), fill=SUB, anchor="ra")
+            msg += "   ·   lowest ever " + v["atl"]
+        d.text((tx, meta_y + 4), ellip(d, msg, F(FR, 20), textw), font=F(FR, 20), fill=SUB)
+        d.text((rx, cy + 22), "—" if st != "pending" else "…", font=F(FL, 44), fill=SUB, anchor="ra")
 
-    # CDKeys, bottom of the reserved price zone (keyshop key — not the same product as a store purchase)
+    # CDKeys, bottom of the card (keyshop key -- not the same product as a store
+    # purchase, hence its own colour and its own line). The meta row always ends
+    # by cy+96, so this line may run far wider than the 190 px price zone: at 184
+    # px the region tag was the first thing ellipsised away, and "· EU" is exactly
+    # the part worth reading (a region-locked key is a different product).
     k = v.get("cdk")
     if k:
         ed = "" if k["edition"] in ("", "Standard") else " · " + k["edition"]
         rg = "" if k["region"] == "GLOBAL" else " · " + k["region"]   # only flag RESTRICTED keys
         txt = f"CDKeys €{k['price']:.2f}{rg}{ed}"
-        d.text((rx, cy + 152), ellip(d, txt, F(FR, 24), 244), font=F(FR, 24), fill=KEY_COL, anchor="ra")
+        d.text((rx, cy + 100), ellip(d, txt, F(FR, 20), 360), font=F(FR, 20), fill=KEY_COL, anchor="ra")
 
 
 def render():
