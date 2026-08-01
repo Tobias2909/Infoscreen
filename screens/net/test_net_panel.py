@@ -92,6 +92,40 @@ for case in scases:
     print(("OK  " if got == want else "FAIL") + "  %-26s want=%s got=%s" % (name, want, got))
 print("streak line:", "PASS" if sok else "FAIL")
 
+# ---------- 1d. day-strip tiering: red only when there IS an outage row ----------
+# A single failed probe (30 s) never becomes a `state` transition (netmon needs
+# CONFIRM=2), so it can never appear in "Recent outages" -- it must therefore not
+# paint the day red either, or the strip shows an incident nothing explains.
+DAY = datetime.date.today()
+D0 = DAY.isoformat()
+D1 = (DAY - datetime.timedelta(days=1)).isoformat()
+mid = int(datetime.datetime.combine(DAY, datetime.time(0, 0), ZI).timestamp())
+
+# an outage that starts before midnight and ends after it must colour BOTH days
+odays = np.outage_days([{"start": mid - 600, "end": mid + 600, "type": "gw_down"}])
+print(("OK  " if odays == {D1, D0} else "FAIL")
+      + "  midnight-spanning outage  want=%s got=%s" % ({D1, D0}, odays))
+
+tcases = [
+    ("real outage day",      D0, {"meas": True, "down": 1320}, {D0}, "outage"),
+    ("single 30 s blip",     D0, {"meas": True, "down": 30},   set(), "blip"),
+    ("two blips, still amber", D0, {"meas": True, "down": 60}, set(), "blip"),
+    ("clean day",            D0, {"meas": True, "down": 0},    set(), "none"),
+    ("planned-only day",     D0, {"meas": True, "down": 0},    set(), "none"),
+    ("bootstrap (hollow)",   D0, {"meas": False, "down": 600}, {D0},  "none"),
+]
+tok = odays == {D1, D0}
+for name, day, entry, od, want in tcases:
+    got = np.strip_tier(day, entry, od)
+    if got != want:
+        tok = False
+    print(("OK  " if got == want else "FAIL") + "  %-24s want=%-7s got=%s" % (name, want, got))
+# the invariant itself: outage tier implies the day is in the outage-log days
+inv = all(np.strip_tier(D0, {"meas": True, "down": n}, set()) != "outage"
+          for n in (30, 60, 3600, 86400))
+print(("OK  " if inv else "FAIL") + "  no outage-log entry -> never red (any duration)")
+print("day-strip tiering:", "PASS" if tok and inv else "FAIL")
+
 # ---------- 2. render with a reboot gap + an outage + offline banner ----------
 smp = []
 t = now - 86400

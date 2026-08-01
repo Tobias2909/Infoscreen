@@ -54,6 +54,18 @@ REBOOT_MAX = 20 * 60          # longer than this is not the nightly reboot
 # as /usr/local/bin/wan-report does: a down-transition detected within
 # PLANNED_WINDOW seconds after a marker belongs to that run.
 PLANNED_WINDOW = 180
+
+# A single failed probe is packet loss, not an outage. netmon needs CONFIRM=2
+# consecutive bad probes before it writes a `state` transition, so a one-probe
+# blip never becomes a row in "Recent outages" -- yet the day strip painted it
+# the same red as a 22 min upstream kill, because it draws a 6 px MINIMUM bar for
+# ANY non-zero downtime (that is how the single 30 s dns_down on 2026-08-01 read
+# as an incident with nothing on screen to explain it). Red now means exactly
+# "this day has an outage row"; anything below the confirm threshold gets its
+# own amber tick plus a legend. The 24 h ribbon and the latency graph still show
+# the blip -- those report what the link actually did, minute by minute.
+BLIP = WARN
+BLIP_H = 5                    # px, fixed: a blip has no meaningful magnitude
 TYPE_COL = {
     "wan_down":  ERR,
     "gw_down":   (255, 110, 60),
@@ -205,6 +217,35 @@ def planned_by_day(outs):
     return per
 
 
+def outage_days(outs):
+    """Dates covered by at least one outage from `outs` (already planned-filtered).
+
+    Days are SPANNED, not just stamped at the start: an outage across midnight
+    leaves downtime seconds on both days, and the second one would otherwise be
+    demoted to a blip.
+    """
+    days = set()
+    for o in outs:
+        day = datetime.date.fromtimestamp(o["start"])
+        last = datetime.date.fromtimestamp(o.get("end") or o["start"])
+        while day <= last:
+            days.add(day.isoformat())
+            day += datetime.timedelta(days=1)
+    return days
+
+
+def strip_tier(day, entry, out_days):
+    """What the day strip owes this day: "none" | "blip" | "outage".
+
+    Kept pure so the red-vs-amber rule is testable without rendering. The
+    invariant it enforces: a RED day always has a matching entry in the outage
+    log, so red on the strip is never unexplained.
+    """
+    if not entry.get("meas") or entry.get("down", 0) <= 0:
+        return "none"
+    return "outage" if day in out_days else "blip"
+
+
 def streak_line(state, stale, live, real, mon_start, now):
     """(seconds, label) for the hero's right-hand figure.
 
@@ -340,8 +381,13 @@ def main():
     # --- day strip ----------------------------------------------------------
     y = 414
     bw = CW / DAYS
+    out_days = outage_days(real)
+    tier = {k: strip_tier(k, per_day[k], out_days) for k in per_day}
     d.text((PAD, y - 30), "Last %d days" % DAYS, font=F(FR, 24), fill=SUB)
-    d.text((PANEL_W - PAD, y - 28), "solid = measured · hollow = Pi-hole log",
+    cap = "solid = measured · hollow = Pi-hole log"
+    if any(v == "blip" for v in tier.values()):
+        cap += "   ·   amber = brief loss (<60 s)"
+    d.text((PANEL_W - PAD, y - 28), cap,
            font=F(FR, 20), fill=SUB, anchor="ra")
     for i, dt in enumerate(days):
         k = dt.isoformat()
@@ -353,10 +399,13 @@ def main():
             rrect(d, box, 4, fill=NODATA)
         elif e["meas"]:
             rrect(d, box, 4, fill=CARD)
-            if frac > 0:
+            if tier[k] == "outage":
                 hgt = max(6, int(54 * min(1.0, frac * 8)))   # amplify: a 1% day must be visible
                 rrect(d, [box[0], box[3] - hgt, box[2], box[3]], 4, fill=ERR)
                 rrect(d, [box[0], box[1], box[2], box[3] - hgt], 4, fill=GREEN)
+            elif tier[k] == "blip":
+                rrect(d, [box[0], box[3] - BLIP_H, box[2], box[3]], 4, fill=BLIP)
+                rrect(d, [box[0], box[1], box[2], box[3] - BLIP_H], 4, fill=GREEN)
             else:
                 rrect(d, box, 4, fill=GREEN)
         else:
