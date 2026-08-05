@@ -274,6 +274,25 @@ def kind(deal):
     if "Epic" in drm or "Epic" in shop:    return "Epic"
     return drm[0] if drm else "key"
 
+DIRECT   = {"steam": 0, "gog": 1, "epic game store": 2}   # first-party stores, user's preference order
+PLATFORM = (("Steam", 0), ("Drm Free", 1), ("Epic", 2))   # which platform a reseller's key is FOR
+
+def cheapest_key(deal):
+    """Sort key for picking the shop to show: price first, then a DETERMINISTIC tie-break.
+
+    Full price is usually a 7-way tie to the cent, and ITAD returns those deals in an
+    order that varies per game and per fetch -- a plain min() therefore looked random
+    (user report 2026-08-05). Order on a tie: first-party stores (Steam, GOG, Epic)
+    ahead of key resellers, and within each group the same platform order, so a Steam
+    key beats a GOG key beats an Epic key. Shop name last so the result is total.
+    """
+    shop = ((deal.get("shop") or {}).get("name") or "")
+    drm  = [x.get("name") for x in (deal.get("drm") or [])]
+    plat = next((r for name, r in PLATFORM if name in drm), 3)
+    tier, rank = (0, DIRECT[shop.lower()]) if shop.lower() in DIRECT else (1, plat)
+    return (round(deal["price"]["amount"], 2), tier, rank, shop.lower())
+
+
 def view(title, ids, prices, cdk):
     ent = ids.get(title)
     box = ent.get("box") if isinstance(ent, dict) else None
@@ -289,7 +308,7 @@ def view(title, ids, prices, cdk):
     if not deals:
         return {**base, "box": box, "state": "nodeal",
                 "atl": money(hlow), "had": bool(all_deals)}
-    best = min(deals, key=lambda x: x["price"]["amount"])
+    best = min(deals, key=cheapest_key)
     price = best["price"]["amount"]
     reg = (best.get("regular") or {}).get("amount")
     atl_amt = hlow["amount"] if hlow else None
