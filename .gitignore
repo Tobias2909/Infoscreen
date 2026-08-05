@@ -1,5 +1,20 @@
-# Infoscreen: track the code and the hand-curated config. Everything a render regenerates,
-# every rotating counter, all secrets, and the big externally-managed trees stay out.
+# Infoscreen: track the CODE and the structural config (screens.conf) only. Everything a
+# render regenerates, every rotating counter, all secrets, the personal curation, and the
+# big externally-managed trees stay out.
+
+# ---- personal curation: which games/feeds/clips YOU follow. Not part of the software,
+#      and this repo is headed for a public GitHub one day. Tracked *.example.* twins
+#      document the schema; copy one to the real name and edit it.
+playlist.txt
+screens/deals/watchlist.json
+screens/releases/countdowns.json
+screens/news/news_feeds.json
+
+# ---- resolved-id caches: derived from the watchlist, rebuild themselves on first fetch.
+#      They exist to PIN a fuzzy title->game match, so keep the local copies, just don't
+#      version them.
+screens/deals/itad_ids.json
+screens/deals/aks_ids.json
 
 # ---- generated bitmaps: rewritten on every render ----
 *.bgra

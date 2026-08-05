@@ -1,0 +1,9 @@
+# Infoscreen playlist  -  one filename per line
+# Files live in:  ~/infoscreen/media/   (that directory is not part of the repo)
+# To add: copy a .mp4/.webm/.gif/.webp/.png/.jpg/.jpeg into media/ and add its name below.
+# "#" lines and blank lines are ignored. A random entry is shown, rotating ~35 min.
+# An entry whose file is missing is skipped and named on screen, it is not fatal.
+
+clip_one.mp4
+clip_two.mp4
+still_image.png

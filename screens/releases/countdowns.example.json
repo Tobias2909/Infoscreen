@@ -1,0 +1,4 @@
+[
+  {"title": "Some Game", "date": "2027-02-18", "cover": "https://cdn2.steamgriddb.com/grid/<hash>.png"},
+  {"title": "Game With A Vague Date", "date": "2027", "cover": "https://example.com/cover.jpg"}
+]
