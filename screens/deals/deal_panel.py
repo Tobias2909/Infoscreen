@@ -34,7 +34,7 @@ from PIL import Image, ImageDraw
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # infoscreen root
 MYDIR = os.path.dirname(os.path.abspath(__file__))
-from kiosk_common import (PAD, PANEL_W, H, TZ, UA, F, FB, FR, FL, ACC, FG, SUB, SALMON, WARN,
+from kiosk_common import (PAD, PANEL_W, H, TZ, UA, F, FB, FR, FL, ACC, FG, SUB, WARN,
                           CARD, LINE, icon, ellip, wrap, new_canvas, header, finish)
 
 WATCH   = MYDIR + "/watchlist.json"
@@ -48,6 +48,8 @@ TZI     = ZoneInfo(TZ)
 
 MAX_AGE = 3600                           # refetch ITAD prices at most once/hour
 GREEN   = (120, 220, 150)
+SALE    = (255, 214, 90)                 # on sale but NOT an all-time low -- deliberately far from
+                                         # SALMON (255,140,50); WARN (255,180,70) sits too close to it
 KEY_COL = (176, 148, 252)                # CDKeys line — violet, deliberately not a first-party store colour
 CHIPBG  = (40, 47, 62)
 API     = "https://api.isthereanydeal.com"
@@ -368,7 +370,12 @@ def draw_card(img, d, cy, v):
     """
     x0, x1 = PAD, PANEL_W - PAD
     st = v["state"]
-    accent = GREEN if (st == "deal" and v["is_atl"]) else (SALMON if st == "deal" else LINE)
+    # Three price states, three colours: green = all-time low, yellow = on sale but
+    # above its low, and NO colour at full price. Before 2026-08-05 a discount and a
+    # full price looked identical (both orange stripe + white price); orange is gone
+    # entirely so that a coloured stripe always means "look at this one" (user pref).
+    tone = GREEN if v.get("is_atl") else (SALE if v.get("cut") else None)
+    accent = tone or LINE
 
     d.rounded_rectangle([x0, cy, x1, cy + CARDH], radius=14, fill=CARD)
     d.rounded_rectangle([x0 + 8, cy + 10, x0 + 15, cy + CARDH - 10], radius=4, fill=accent)
@@ -422,11 +429,10 @@ def draw_card(img, d, cy, v):
             d.text((mx, meta_y + 6), ellip(d, "·  " + "  ·  ".join(info),
                                            F(FR, 22), max(0, meta_right - mx)),
                    font=F(FR, 22), fill=GREEN if v["is_atl"] else SUB)
-        d.text((rx, cy + 10), v["price"], font=F(FB, 48), fill=GREEN if v["is_atl"] else FG, anchor="ra")
+        d.text((rx, cy + 10), v["price"], font=F(FB, 48), fill=tone or FG, anchor="ra")
         if pill:
             d.rounded_rectangle([rx - pw, cy + 76, rx, cy + 112], radius=11, fill=CHIPBG)
-            d.text((rx - pw / 2, cy + 94), pill, font=F(FB, 24),
-                   fill=GREEN if v["is_atl"] else SALMON, anchor="mm")
+            d.text((rx - pw / 2, cy + 94), pill, font=F(FB, 24), fill=tone, anchor="mm")   # pill only exists when cut>0, so tone is set
     else:
         msg = {"nodeal": "only grey-market listings" if v.get("had") else "no price yet",
                "notfound": "not found on IsThereAnyDeal", "pending": "looking up…"}[st]
