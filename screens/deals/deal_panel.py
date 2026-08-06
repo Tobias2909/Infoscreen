@@ -47,9 +47,10 @@ AKS_CACHE = MYDIR + "/aks_cache.json"    # {ts, last_ok, next_try, err, data:{ti
 TZI     = ZoneInfo(TZ)
 
 MAX_AGE = 3600                           # refetch ITAD prices at most once/hour
-GREEN   = (120, 220, 150)
-SALE    = (255, 214, 90)                 # on sale but NOT an all-time low -- deliberately far from
-                                         # SALMON (255,140,50); WARN (255,180,70) sits too close to it
+GREEN   = (120, 220, 150)                # on sale, but above its all-time low
+GOLD    = (255, 214, 90)                 # at the all-time low -- gold for the best price ever seen;
+                                         # deliberately far from SALMON (255,140,50); WARN (255,180,70)
+                                         # sits too close to it
 KEY_COL = (176, 148, 252)                # CDKeys line — violet, deliberately not a first-party store colour
 CHIPBG  = (40, 47, 62)
 API     = "https://api.isthereanydeal.com"
@@ -370,11 +371,11 @@ def draw_card(img, d, cy, v):
     """
     x0, x1 = PAD, PANEL_W - PAD
     st = v["state"]
-    # Three price states, three colours: green = all-time low, yellow = on sale but
+    # Three price states, three colours: gold = all-time low, green = on sale but
     # above its low, and NO colour at full price. Before 2026-08-05 a discount and a
     # full price looked identical (both orange stripe + white price); orange is gone
     # entirely so that a coloured stripe always means "look at this one" (user pref).
-    tone = GREEN if v.get("is_atl") else (SALE if v.get("cut") else None)
+    tone = GOLD if v.get("is_atl") else (GREEN if v.get("cut") else None)
     accent = tone or LINE
 
     d.rounded_rectangle([x0, cy, x1, cy + CARDH], radius=14, fill=CARD)
@@ -428,7 +429,7 @@ def draw_card(img, d, cy, v):
         if info:
             d.text((mx, meta_y + 6), ellip(d, "·  " + "  ·  ".join(info),
                                            F(FR, 22), max(0, meta_right - mx)),
-                   font=F(FR, 22), fill=GREEN if v["is_atl"] else SUB)
+                   font=F(FR, 22), fill=GOLD if v["is_atl"] else SUB)
         d.text((rx, cy + 10), v["price"], font=F(FB, 48), fill=tone or FG, anchor="ra")
         if pill:
             d.rounded_rectangle([rx - pw, cy + 76, rx, cy + 112], radius=11, fill=CHIPBG)
