@@ -98,6 +98,17 @@ down locally from the cached end time, so the network is only needed to catch a 
 flipping. Conditional requests do not help here because their CDN ignores `If-None-Match`, so
 polling less often is the only polite lever left.
 
+The same document also carries the special events, so watching for them costs no extra request.
+When a Big Run, an Eggstra Work or a Splatfest is announced, which tends to happen about a week
+ahead, a banner appears under the header with the start time, and for the two Salmon Run modes
+the stage and the weapon kit as well. A Splatfest has neither of those, so it shows its title and
+the three options to choose between, each written in its own team colour. Once the event begins the banner switches from a countdown to
+LIVE NOW and counts down to the end. The whole panel is relit at the same moment, gold for an
+Eggstra Work, a heavy orange with yellow flares for a Big Run, and the three team colours arriving
+from three directions for a Splatfest, so the screen looks different before you have read a single
+word of it. The next rotation row is dropped while an event is showing, which is what pays for the
+space. With nothing announced the screen looks exactly as it always did.
+
 ### Calendar
 
 ![Calendar](docs/screenshots/cal.png)
