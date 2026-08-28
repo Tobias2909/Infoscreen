@@ -3,7 +3,7 @@
 than the byte count mpv's overlay-add maps (offset + h*stride). A short file = SIGBUS."""
 import os, sys, time
 
-ROOT = "/home/skylab/infoscreen"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WATCH = {
     ROOT + "/dim.bgra": 1920 * 1080 * 4,
     ROOT + "/temp.bgra": 364 * 64 * 4,

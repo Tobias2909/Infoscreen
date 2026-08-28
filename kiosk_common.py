@@ -56,8 +56,8 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 # ---- location / net identity ----
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # so `import sundim` works
 import sundim                                                     # shared sun/dim maths,
-from sundim import LAT, LON, TZ, solar_brightness, dim_alpha, DIM_STEP   # no import side effects
-UA = "infoscreen-pi/1.0 https://github.com/<your-user>/infoscreen"
+from sundim import (LAT, LON, TZ, LABEL, UA,                       # location + contact come
+                    solar_brightness, dim_alpha, DIM_STEP)        # from machine-local config
 ICON_CACHE = DIR + "/icon_cache"
 
 # ---- fonts (memoized: truetype reload per call is wasteful at 60s cadence) ----
@@ -184,7 +184,7 @@ def net_online(ttl=180):
     time a render happened to ping successfully.
 
     Uses netmon's DEBOUNCED state (two consecutive bad cycles), not its per-cycle verdict:
-    a single dropped ICMP packet is normal on this upstream uplink and should not flash
+    a single dropped ICMP packet is normal on this uplink and should not flash
     "No internet connection" across every screen. Change NETMON_OK/the key read below to
     d["raw"] if you want the twitchier per-packet behaviour.
 

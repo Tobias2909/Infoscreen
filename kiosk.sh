@@ -1,6 +1,7 @@
 #!/bin/bash
 export XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0
 DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+export INFOSCREEN_DIR="$DIR"    # kiosk.lua reads it; mpv inherits our environment
 EXITLOG="$DIR/mpv_exits.log"    # persistent (survives the nightly reboot, unlike /tmp/kiosk.log)
 # Render every configured screen once at startup so tap-switching is instant (screens defined in screens.conf).
 # Backgrounded: a slow API must not delay mpv launch; mpv paints the existing panel_*.bgra, renders refresh them.

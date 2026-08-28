@@ -18,7 +18,7 @@ cannot -- that classification is the whole point of the screen:
   link_down    eth2 lost carrier
   no_lease     carrier, but no IPv4 address (DHCP gone)
   gw_down      gateway unreachable -> upstream infrastructure
-  wan_down     gateway fine, nothing beyond it -> upstream's uplink
+  wan_down     gateway fine, nothing beyond it -> the upstream's uplink
   dns_down     internet reachable but resolvers are not
   icmp_blocked ICMP filtered while DNS still works -- NOT an outage, just noted
   up
@@ -34,7 +34,7 @@ SD-card wear is a real constraint here, so per-cycle samples are buffered in RAM
 and flushed every 10 cycles (5 min) -- 288 writes/day instead of 2880. State
 transitions bypass the buffer and are written the moment they are confirmed.
 
-On top of reporting, a watchdog reacts to one specific failure the upstream produces
+On top of reporting, a watchdog reacts to one specific failure the upstream network produces
 (see the WD_* block below): a confirmed outage that the link layer hides, which
 only a fresh DHCP lease clears.
 """

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Watchdog decision tests (netmon.wd_due) -- the part that cannot be observed on
-the live screen without waiting for a real upstream outage.
+the live screen without waiting for a real uplink outage.
 
 Pure logic only: nothing here pings, bounces the uplink or writes netlog.
 Run: python3 test_netmon.py
 """
 import sys, os
 
-sys.path.insert(0, "/home/skylab/infoscreen/screens/net")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import netmon as nm
 
 T = 1_800_000_000           # arbitrary "now"

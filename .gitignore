@@ -10,6 +10,13 @@ screens/deals/watchlist.json
 screens/releases/countdowns.json
 screens/news/news_feeds.json
 
+# ---- machine-local installation settings: which place this screen reports the weather for,
+#      and the contact string the weather APIs are asked to identify this client by. Tracked
+#      twin: location.example.json. contact.txt is optional -- without it the code sends the
+#      project URL, which is all met.no requires.
+location.json
+contact.txt
+
 # ---- resolved-id caches: derived from the watchlist, rebuild themselves on first fetch.
 #      They exist to PIN a fuzzy title->game match, so keep the local copies, just don't
 #      version them.

@@ -8,15 +8,59 @@ to be two independent copies of this maths kept in step by a comment. Had they e
 each would have read the other's dim_alpha.txt as "changed" and rewritten 8.3 MB on every
 single render -- worse than having no gate at all.
 
-Deliberately SIDE-EFFECT FREE on import. render_weather.py takes its own flock under the tag
+Also the home of the machine-local location/contact config (see _location below), because it
+is the one module BOTH kiosk_common and render_weather may import.
+
+Deliberately SIDE-EFFECT FREE on import beyond reading those two config files. render_weather.py takes its own flock under the tag
 "render_weather.py", so it must not import kiosk_common: that module's import-time
 _single_instance() would open the very same lock file on a second fd, fail LOCK_EX|LOCK_NB and
 sys.exit(0) the weather screen.
 """
-import datetime, math, os
+import datetime, json, math, os
 from zoneinfo import ZoneInfo
 
-LAT, LON, TZ = 52.5200, 13.4050, "Europe/Berlin"   # Berlin; the one location constant
+DIR = os.path.dirname(os.path.abspath(__file__))        # = the infoscreen root
+
+# ---- machine-local settings: WHERE this screen hangs, and the contact string the weather APIs
+# are asked to identify us by. Both describe THIS installation rather than the software, so both
+# live outside the repo (see .gitignore). A missing file means the documented defaults below, so a
+# fresh clone renders instead of crashing -- copy location.example.json to location.json and edit.
+_DEFAULTS = {"lat": 52.5200, "lon": 13.4050, "tz": "Europe/Berlin", "label": "Berlin"}
+CONTACT_DEFAULT = "https://github.com/<your-user>/infoscreen"
+
+
+def _location(path=None):
+    """Read location.json, falling back per-key to _DEFAULTS.
+
+    Reading these two files is the ONLY import-time effect this module has, and it is read-only
+    -- no locks, no writes -- so the side-effect note above still holds.
+    """
+    cfg = dict(_DEFAULTS)
+    try:
+        with open(path or DIR + "/location.json") as f:
+            cfg.update({k: v for k, v in json.load(f).items() if k in _DEFAULTS})
+    except (OSError, ValueError):
+        pass                                # no file, or unparseable -> defaults
+    return cfg
+
+
+def _contact(path=None):
+    # met.no answers 403 to a request that does not identify its client and give a way to reach
+    # whoever runs it. A project URL satisfies that, which is why the default needs no personal
+    # data; drop a contact.txt next to this file to send your own address instead.
+    try:
+        c = open(path or DIR + "/contact.txt").read().strip()
+        if c:
+            return c
+    except OSError:
+        pass
+    return CONTACT_DEFAULT
+
+
+_LOC = _location()
+LAT, LON, TZ, LABEL = _LOC["lat"], _LOC["lon"], _LOC["tz"], _LOC["label"]
+CONTACT = _contact()
+UA = "infoscreen-pi/1.0 (%s)" % CONTACT      # every outbound fetch identifies itself with this
 BRIGHT_NIGHT, BRIGHT_DAY = 0.30, 0.55   # dim floor (sun at/below horizon) .. ceiling (solar noon)
 DIM_STEP = 4                            # quantise the alpha: a 1/255 step is invisible, but every
                                         # distinct value costs an 8.3 MB rewrite

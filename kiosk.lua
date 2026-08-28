@@ -9,7 +9,12 @@
 -- would land on a recent panel — a leftover from when weather was the only screen and that timer
 -- was what refreshed it. Every screen now renders when it is about to be seen instead.
 local utils = require 'mp.utils'
-local DIR = "/home/skylab/infoscreen"
+-- Where the project lives. kiosk.sh works it out from its own path and exports it; the
+-- debug.getinfo fallback covers a hand-rolled `mpv --script=.../kiosk.lua` launch.
+local DIR = os.getenv("INFOSCREEN_DIR")
+if not DIR or DIR == "" then
+  DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$") or "."
+end
 local PY = "/usr/bin/python3"
 local MODE_FILE = DIR .. "/panel_mode.txt"          -- persists the active screen key across reboots
 local VIDEO_X = math.floor(0.62 * 1920)             -- video left edge (matches --video-margin-ratio-left=0.62); left of this = panel

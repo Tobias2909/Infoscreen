@@ -17,7 +17,7 @@ DIR=os.path.dirname(os.path.abspath(__file__))
 ROOT=os.path.dirname(os.path.dirname(DIR))  # infoscreen root (shared dim.bgra)
 sys.path.insert(0, ROOT)          # for sundim only. NOT kiosk_common: its import-time
 import sundim                     # _single_instance() would grab this script's own lock
-from sundim import LAT, LON, TZ   # file on a second fd and exit(0). See sundim.py.
+from sundim import LAT, LON, TZ, LABEL, UA   # file on a second fd and exit(0). See sundim.py.
 OUT=DIR+"/panel.png"
 CACHE=DIR+"/weather_cache.json"   # last-good API response + epoch ts
 STATE=DIR+"/fetch_state.json"     # {last_attempt, fail_count} for backoff
@@ -74,7 +74,7 @@ def fetch_metno():
     # its compact feed has no feels-like, so apparent_temperature falls back to air temp.
     from zoneinfo import ZoneInfo
     url=("https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=%s&lon=%s")%(LAT,LON)
-    req=urllib.request.Request(url,headers={"User-Agent":"infoscreen-pi/1.0 https://github.com/<your-user>/infoscreen"})
+    req=urllib.request.Request(url,headers={"User-Agent":UA})   # met.no 403s without an identifying UA
     with urllib.request.urlopen(req,timeout=30) as r: j=json.load(r)
     ts=j["properties"]["timeseries"]
     tz=ZoneInfo(TZ)
@@ -215,7 +215,7 @@ def main():
     for y in range(H):
         t=y/H; img.paste(tuple(int(top[i]+(bot[i]-top[i])*t) for i in range(3)),(0,y,PANEL_W,y+1))
     d=ImageDraw.Draw(img); PAD=90
-    d.text((PAD,66),"Berlin",font=F(FB,70),fill=FG)
+    d.text((PAD,66),LABEL,font=F(FB,70),fill=FG)   # place name from location.json
     now=datetime.datetime.now().strftime("%a  %d %b")
     d.text((PAD,160),now,font=F(FR,34),fill=SUB)
     # CPU temp is a live OSD overlay drawn by the lua (consistent across screens), not baked here.

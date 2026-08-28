@@ -57,7 +57,7 @@ for a, b in runs:
         "end": (b + 1) * 60,
         "dur_min": b - a + 1,
         # the DB can only ever prove "no upstream answered" -- it cannot tell
-        # upstream-link-down from gateway-down from ISP-down. netmon can; this can't.
+        # link-down from gateway-down from ISP-down. netmon can; this can't.
         "type": "upstream",
         "src": "ftl",
         "unans": sum(unans.get(m, 0) for m in rng),

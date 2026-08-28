@@ -75,8 +75,8 @@ TYPE_COL = {
     "upstream":  ERR,          # bootstrap events cannot be classified further
 }
 TYPE_LBL = {
-    "wan_down":  "upstream uplink dead",
-    "gw_down":   "upstream gateway unreachable",
+    "wan_down":  "uplink dead",
+    "gw_down":   "gateway unreachable",
     "link_down": "cable / carrier lost",
     "no_lease":  "no DHCP lease",
     "dns_down":  "resolvers unreachable",

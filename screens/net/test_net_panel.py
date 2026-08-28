@@ -7,7 +7,7 @@
 Renders to /tmp only -- np.finish is replaced so the live panel.bgra is untouched.
 """
 import sys, os, time, datetime, json
-ROOT = "/home/skylab/infoscreen"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, ROOT + "/screens/net")
 import kiosk_common as kc

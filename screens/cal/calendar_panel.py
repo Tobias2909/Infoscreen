@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Calendar screen — upcoming events from one or more subscribed iCal (.ics) feeds.
 
-Two bands stacked on the left panel: "Personal" (Google secret-iCal) on top, "Uni" (a university's
-timetable ICS subscription) below. Per band: events for the NEXT 3 DAYS grouped by day
+Two bands stacked on the left panel, labelled from calendars.json -- e.g. a private feed
+(a Google secret-iCal URL) on top and a timetable feed from a university's ICS export below. Per band: events for the NEXT 3 DAYS grouped by day
 (Today / Tomorrow / weekday). Title only (+ HH:MM for timed events; all-day = no time).
 If a band has NO events in the next 3 days it falls back to that feed's next 3 upcoming
 events (any date), each shown small WITH its date.
