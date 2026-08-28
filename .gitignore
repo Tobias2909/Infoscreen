@@ -26,6 +26,9 @@ screens/deals/aks_ids.json
 # ---- generated bitmaps: rewritten on every render ----
 *.bgra
 *.png
+# ...except the README screenshots, which are generated too but have to be in the repo for
+# GitHub to render them. tools/screenshot.py rebuilds them from example data.
+!docs/screenshots/*.png
 
 # ---- rotating runtime state ----
 panel_mode.txt

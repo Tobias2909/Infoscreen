@@ -26,7 +26,7 @@ DIR = os.path.dirname(os.path.abspath(__file__))        # = the infoscreen root
 # live outside the repo (see .gitignore). A missing file means the documented defaults below, so a
 # fresh clone renders instead of crashing -- copy location.example.json to location.json and edit.
 _DEFAULTS = {"lat": 52.5200, "lon": 13.4050, "tz": "Europe/Berlin", "label": "Berlin"}
-CONTACT_DEFAULT = "https://github.com/<your-user>/infoscreen"
+CONTACT_DEFAULT = "https://github.com/Tobias2909/Infoscreen"
 
 
 def _location(path=None):

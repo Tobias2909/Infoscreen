@@ -3,5 +3,5 @@
   {"cat":"it",    "src":"HN",        "url":"https://news.ycombinator.com/rss"},
   {"cat":"ai",    "src":"Google AI", "url":"https://blog.google/technology/ai/rss/"},
   {"cat":"games", "src":"PC Gamer",  "url":"https://www.pcgamer.com/rss/"},
-  {"cat":"anime", "src":"Crunchy",   "url":"https://www.crunchyroll.com/newsrss"}
+  {"cat":"anime", "src":"Crunchy",   "url":"https://feeds.feedburner.com/crunchyroll/rss/anime"}
 ]
