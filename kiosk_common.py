@@ -253,8 +253,8 @@ def _atomic(path, data):
     with a shared "<path>.tmp" two concurrent renders end up on ONE temp inode, so writer B's
     open(...,"wb") (O_TRUNC) can zero the inode writer A has already renamed onto the live
     path -- measured on the Pi: the visible dim.bgra hit 0 bytes, then refilled in ~1 MB steps
-    over 30-50 ms. That is why the 2026-07-17 "atomic" fix still crashed on fast taps: it was
-    atomic per writer, not across writers."""
+    over 30-50 ms. That is why an "atomic" fix at the single-writer level still crashed
+    on fast taps: it was atomic per writer, not across writers."""
     tmp = f"{path}.{os.getpid()}.tmp"
     try:
         with open(tmp, "wb") as f:

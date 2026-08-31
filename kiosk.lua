@@ -76,7 +76,7 @@ local notice_msg = {}          -- kind -> text currently on screen (nil = that s
 
 -- overlay-add mmaps EXACTLY w*h*stride bytes of the file: if the file is shorter at that
 -- instant mpv dies with SIGBUS ("Bus error"), the desktop flashes and kiosk.sh respawns it.
--- The writers are safe now (PID-unique temp file + atomic rename, 2026-07-30), but check the
+-- The writers are safe now (PID-unique temp file + atomic rename), but check the
 -- size anyway -- this bug class has come back twice, and a short file must degrade to one
 -- skipped repaint, never a crash. A handful of stats per repaint, all page-cache hits.
 local function ready(path, bytes)
@@ -183,8 +183,8 @@ end
 -- FATAL: loadfile fails -> the playlist is empty -> mpv prints "Exiting... (Some errors
 -- happened)" and quits, kiosk.sh respawns it and the display flashes. That is a 1-in-N dice
 -- roll on every media change, so it fires either after hours of the 35-min auto-rotate or the
--- moment somebody taps a few times -- which is exactly how it was reported (2026-07-30: line
--- "marine_sitting" was missing its .mp4 and killed mpv roughly once per 46 media changes).
+-- moment somebody taps a few times -- which is exactly how it showed up in practice: one
+-- playlist line was missing its .mp4 and killed mpv roughly once per 46 media changes.
 -- Three independent layers now:
 --   1. mpv runs with --idle=yes, so a failed load can no longer end the process at all,
 --   2. entries with no file are filtered out here, before loadfile ever sees them,
@@ -390,7 +390,7 @@ mp.add_periodic_timer(30, net_watch)
 
 -- ---- live CPU temp badge (overlay id 1, UNDER the dim; one source updated on a timer ->
 --      identical on every screen, unlike the old per-panel baked temp) ----
--- Cadence is 60 s, not 15 s (2026-07-30): temp_badge.py skips the write while the whole-degree
+-- Cadence is 60 s, not 15 s: temp_badge.py skips the write while the whole-degree
 -- value is unchanged, but the CPU temp jitters enough that only 28% of 15 s ticks were skipped
 -- (0.39 GB/day of SD writes + 5760 python spawns/day for a number that nobody watches tick).
 local function render_temp() os.execute(PY .. " " .. DIR .. "/temp_badge.py >/dev/null 2>&1 &") end

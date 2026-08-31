@@ -11,7 +11,7 @@ first-party direct (Steam / GOG / Epic). Each card is TAGGED with what it is (St
 so key-vs-direct is obvious. Only known grey-market / account-share shops (BLOCK set) are dropped — ITAD's
 default feed already excludes G2A/Kinguin, so normally nothing is filtered.
 
-SECOND SOURCE — CDKeys (2026-07-26): ITAD dropped keyshops entirely, so CDKeys is invisible to it. CDKeys
+SECOND SOURCE — CDKeys: ITAD dropped keyshops entirely, so CDKeys is invisible to it. CDKeys
 renamed itself "Loaded" (cdkeys.com -> loaded.com) and is tracked by AllKeyShop as merchant id 9. We query
 AllKeyShop's extension endpoint for THAT MERCHANT ONLY and draw its price as a second line on the card:
   https://www.allkeyshop.com/api/v2-1-250304/vakrs_extension.php?action=CatalogV2&...&offers.merchant.id:or=9
@@ -174,7 +174,7 @@ def _norm(s):
 
 def _tail(s):
     """Trailing sequel marker ('2', '3rd', ...). Sequels differ ONLY here and a fuzzy ratio can't tell
-    'Trails in the Sky' from 'Trails in the Sky the 3rd', so this must match exactly."""
+    'Some Game' from 'Some Game the 3rd', so this must match exactly."""
     m = re.search(r"\b(\d+(?:st|nd|rd|th)?)$", s)
     return m.group(1) if m else ""
 
@@ -277,15 +277,15 @@ def kind(deal):
     if "Epic" in drm or "Epic" in shop:    return "Epic"
     return drm[0] if drm else "key"
 
-DIRECT   = {"steam": 0, "gog": 1, "epic game store": 2}   # first-party stores, user's preference order
+DIRECT   = {"steam": 0, "gog": 1, "epic game store": 2}   # first-party stores, in preference order
 PLATFORM = (("Steam", 0), ("Drm Free", 1), ("Epic", 2))   # which platform a reseller's key is FOR
 
 def cheapest_key(deal):
     """Sort key for picking the shop to show: price first, then a DETERMINISTIC tie-break.
 
     Full price is usually a 7-way tie to the cent, and ITAD returns those deals in an
-    order that varies per game and per fetch -- a plain min() therefore looked random
-    (user report 2026-08-05). Order on a tie: first-party stores (Steam, GOG, Epic)
+    order that varies per game and per fetch -- a plain min() therefore looked random.
+    Order on a tie: first-party stores (Steam, GOG, Epic)
     ahead of key resellers, and within each group the same platform order, so a Steam
     key beats a GOG key beats an Epic key. Shop name last so the result is total.
     """
@@ -316,7 +316,7 @@ def view(title, ids, prices, cdk):
     reg = (best.get("regular") or {}).get("amount")
     atl_amt = hlow["amount"] if hlow else None
     # A game that has NEVER been discounted has historyLow == its regular price, so
-    # "lowest ever" is trivially true and reads as a bargain (Slay the Spire 2, 2026-08-05).
+    # "lowest ever" is trivially true and reads as a bargain.
     # Detect that and drop the ATL treatment entirely -- the card says "never discounted".
     never_disc = atl_amt is not None and reg is not None and atl_amt >= reg - 0.01
     is_atl = atl_amt is not None and price <= atl_amt + 0.01 and not never_disc
@@ -372,9 +372,9 @@ def draw_card(img, d, cy, v):
     x0, x1 = PAD, PANEL_W - PAD
     st = v["state"]
     # Three price states, three colours: gold = all-time low, green = on sale but
-    # above its low, and NO colour at full price. Before 2026-08-05 a discount and a
+    # above its low, and NO colour at full price. Earlier a discount and a
     # full price looked identical (both orange stripe + white price); orange is gone
-    # entirely so that a coloured stripe always means "look at this one" (user pref).
+    # entirely so that a coloured stripe always means "look at this one".
     tone = GOLD if v.get("is_atl") else (GREEN if v.get("cut") else None)
     accent = tone or LINE
 

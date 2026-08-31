@@ -60,8 +60,8 @@ DOWN_STATES = {"link_down", "no_lease", "gw_down", "wan_down", "dns_down"}
 
 # --- uplink watchdog ---------------------------------------------------------
 # The upstream stops forwarding this box's traffic when its session/DHCP binding goes
-# stale, while eth2 keeps carrier and the gateway keeps answering ARP (2026-07-26,
-# 17 min). NM sees a healthy link, never re-DHCPs, and the uplink stays dead until
+# stale, while eth2 keeps carrier and the gateway keeps answering ARP (observed
+# lasting 17 minutes). NM sees a healthy link, never re-DHCPs, and the uplink stays dead until
 # the connection is bounced. The probes above already know this happened, so the
 # watchdog reads that verdict instead of measuring anything itself, and re-DHCPs.
 WD_ENABLE = True

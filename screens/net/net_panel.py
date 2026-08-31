@@ -59,7 +59,7 @@ PLANNED_WINDOW = 180
 # consecutive bad probes before it writes a `state` transition, so a one-probe
 # blip never becomes a row in "Recent outages" -- yet the day strip painted it
 # the same red as a 22 min upstream kill, because it draws a 6 px MINIMUM bar for
-# ANY non-zero downtime (that is how the single 30 s dns_down on 2026-08-01 read
+# ANY non-zero downtime (that is how a single 30 s dns_down read
 # as an incident with nothing on screen to explain it). Red now means exactly
 # "this day has an outage row"; anything below the confirm threshold gets its
 # own amber tick plus a legend. The 24 h ribbon and the latency graph still show

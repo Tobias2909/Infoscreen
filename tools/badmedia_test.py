@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Regression test: a media file mpv cannot load must NEVER end the mpv process.
 
-That was the crash. playlist.txt line "marine_sitting" was missing its .mp4, so roughly one
-media change in 46 hit it, loadfile failed, the playlist ran empty and mpv exited with
+That was the crash. One playlist.txt line was missing its .mp4, so roughly one media change
+in 46 hit it, loadfile failed, the playlist ran empty and mpv exited with
 "Exiting... (Some errors happened)". kiosk.sh respawned it -> the display flashed. It looked
-like "crashes after hours, when I switch screens" because the 35-min auto-rotate rolls the
-dice slowly while a burst of taps rolls it fast.
+like a crash after hours that also followed screen switches, because the 35-min auto-rotate
+rolls the dice slowly while a burst of taps rolls it fast.
 
 Invariant checked here: mpv's PID does not change while bad loads are forced at it.
 

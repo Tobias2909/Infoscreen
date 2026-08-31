@@ -38,7 +38,7 @@ def _last(y, m):
 
 def classify(item, now):
     """Return sort key + status + display strings (or hidden=True). Approx dates resolve to the
-    LAST day of their period (user pref 2026-07-17: an imprecise date = the latest it could be)."""
+    LAST day of their period (an imprecise date resolves to the latest it could be)."""
     ds = str(item.get("date", "")).strip()
     today = now.date()
     def key(d): return datetime.datetime.combine(d, datetime.time.min, TZI).timestamp()
