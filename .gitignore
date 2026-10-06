@@ -3,7 +3,7 @@
 # big externally-managed trees stay out.
 
 # ---- personal curation: which games/feeds/clips YOU follow. Not part of the software,
-#      and this repo is headed for a public GitHub one day. Tracked *.example.* twins
+#      and this repo is public. Tracked *.example.* twins
 #      document the schema; copy one to the real name and edit it.
 playlist.txt
 screens/deals/watchlist.json
